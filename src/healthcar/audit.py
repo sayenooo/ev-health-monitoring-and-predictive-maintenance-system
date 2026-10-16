@@ -100,7 +100,7 @@ def audit(kind: str, df: pd.DataFrame, path: Path,
     report = {
         "dataset": kind, "selected_file": str(path),
         "rows_loaded": len(df), "columns": list(df.columns),
-        "sampled_first_rows": max_rows is not None,
+        "sampled_first_rows": max_rows is not None and len(df) >= max_rows,
         "duplicate_rows": int(df.duplicated().sum()),
         "missing_percent": df.isna().mean().mul(100).round(3).to_dict(),
         "dtype": df.dtypes.astype(str).to_dict(),
@@ -148,8 +148,16 @@ def audit(kind: str, df: pd.DataFrame, path: Path,
         report["warnings"].append(
             "PMSM labels were obtained on a lab rig, not validated on passenger EVs."
         )
-    if max_rows is not None:
-        report["warnings"].append("This report covers only the first rows, not the entire source file.")
+    inf_columns = {name: count for name, count in report["infinite_counts"].items() if count}
+    if inf_columns:
+        report["warnings"].append(
+            f"Non-finite values detected (positive/negative infinity): {inf_columns}. "
+            "Inspect before training; non-finite values are excluded from descriptive statistics only."
+        )
+    if report["sampled_first_rows"]:
+        report["warnings"].append(
+            f"At least {max_rows:,} rows were available; results may cover only the first rows."
+        )
     return report
 
 
@@ -166,5 +174,15 @@ def write_report(kind: str, max_rows: int | None = 250_000,
     frame.isna().mean().mul(100).rename("missing_pct").to_csv(
         folder / f"{kind}_missing.csv", header=True
     )
-    frame.describe(include="all").transpose().to_csv(folder / f"{kind}_summary.csv")
+    # Replace only non-finite numeric values in a temporary descriptive-statistics copy.
+    # Original telemetry is never silently imputed or modified.
+    stats_frame = frame.copy()
+    numeric_cols = stats_frame.select_dtypes(include="number").columns
+    if len(numeric_cols):
+        stats_frame[numeric_cols] = stats_frame[numeric_cols].replace(
+            [np.inf, -np.inf], np.nan
+        )
+    stats_frame.describe(include="all").transpose().to_csv(
+        folder / f"{kind}_summary.csv"
+    )
     return report, frame
