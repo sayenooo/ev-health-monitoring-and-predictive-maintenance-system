@@ -15,7 +15,7 @@ HealthCar is a research-oriented, read-only decision-support prototype for passe
 - [System requirements](docs/system_requirements.md) — functional and nonfunctional requirements.
 - [Architecture](docs/architecture.md) — modules, data flow and boundaries.
 - [Data requirements](docs/data_requirements.md) and [dataset feasibility](docs/dataset_feasibility.md).
-- [Evaluation protocol](docs/evaluation_plan.md) and [research sources](docs/references.md).
+- [Evaluation protocol](docs/evaluation_plan.md), [research sources](docs/references.md) and [repository conventions](docs/repository_conventions.md).
 
 ## Research tracks
 
@@ -51,7 +51,7 @@ py -m venv .venv
 .venv\Scripts\python.exe -m jupyter notebook
 ```
 
-For subsequent sessions, only the final Jupyter command is needed. In Jupyter, open `notebooks/01_scut_data_audit.ipynb`.
+Windows helpers: `scripts/setup_windows.bat` and `scripts/start_notebooks_windows.bat`. For subsequent sessions, only the final Jupyter command is needed. In Jupyter, open `notebooks/01_scut_data_audit.ipynb`.
 
 **Data distribution:** Third-party datasets and generated reports are not tracked by Git. Download them from original publishers using `scripts/download_data.py` and review the [source registry](docs/dataset_feasibility.md). Record dataset provenance and redistribution conditions before sharing raw data.
 
