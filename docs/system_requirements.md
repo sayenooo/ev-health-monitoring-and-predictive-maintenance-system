@@ -1,45 +1,30 @@
-# System Requirements Specification — HealthCar
-**Document ID:** HC-SRS-001 · **Version:** 1.0 · **Baseline:** 2026-10-16
+# Research and ML Requirements — HealthCar
+**Document ID:** HC-SRS-001 · **Version:** 1.1 · **Baseline:** 2026-10-16
 
-## Actors and environment
-**Primary actor:** BEV owner. **Research/maintenance actor:** project developer maintaining datasets, ML models and evaluation artifacts.
+This specification governs an **applied ML prediction experiment** for BDAPP, not an application/backend.
 
-**Runtime:** Local offline historical CSV / sensor replay; web-based read-only dashboard. A future supported live interface is explicitly outside the initial release.
-
-## Functional requirements
-| ID | Requirement | Priority | Acceptance evidence |
-|---|---|---|---|
-| FR-01 | Import officially documented source datasets from configurable local paths | Must | Successfully import selected source table and report provenance |
-| FR-02 | Validate schema, types, timestamps, missing and non-finite values | Must | Machine-readable audit report |
-| FR-03 | Compute descriptive operating and battery indicators from documented inputs | Must | Reproducible feature functions with unit tests |
-| FR-04 | Separate charging/driving context where `charging_signal` is valid | Must | Traceable context labels or unknown-code status |
-| FR-05 | Visualize recorded signals and variation over time | Must | Dashboard plot from real data/replay |
-| FR-06 | Generate context-aware anomaly indicators with supporting evidence | Must | Repeatable baseline and documented limitations |
-| FR-07 | Display clear alert states: available, unavailable, anomalous and unconfirmed | Must | UI examples and tests |
-| FR-08 | Classify PMSM lab fault labels using supervised model where justified | Should | Independent test evaluation and class explanations |
-| FR-09 | Explain which measured features contributed to a model warning | Should | Explanation tied to model outputs and input fields |
-| FR-10 | Provide safe, non-autonomous next-step recommendations | Should | Text guidance with uncertainty and no actuation |
-| FR-11 | Record reproducible outputs and experiment configurations | Must | Reports and run instructions |
-| FR-12 | Estimate future failure risk only after labeled-horizon feasibility gate | Could | Separate approved data/evaluation protocol |
-
-`Must` requirements define MVP; `Should` define target completeness; `Could` is conditional.
-
-## Nonfunctional requirements
+## Research functional requirements
 | ID | Requirement | Verification |
 |---|---|---|
-| NFR-01 | Reproducibility | Fresh checkout + published requirements reproduce audit / model runs |
-| NFR-02 | Data provenance | Every source has URL, citation, selected files, version and restrictions |
-| NFR-03 | Evaluation validity | No inadvertent sharing of time windows or lab sessions across splits |
-| NFR-04 | Operational safety | No writing to vehicle hardware, ECU, BMS or control buses |
-| NFR-05 | Transparency | Distinguish direct sensor readings from estimates and model hypotheses |
-| NFR-06 | Data minimization | Avoid uploading raw third-party telemetry or secrets to GitHub |
-| NFR-07 | Maintainability | Cohesive modules, snake_case Python paths and automated smoke tests |
-| NFR-08 | Resource practicality | First data-audit workflow works with a defined row limit on a Windows laptop |
-| NFR-09 | Robustness | Corrupt or missing source files produce actionable error messages |
-| NFR-10 | Portability | Supported Python environment and install instructions documented |
+| ML-01 | Inventory processed EV fault source, provenance and labels | File/metadata audit |
+| ML-02 | Define candidate target and temporal cutoff with no future information in features | Target specification / leakage review |
+| ML-03 | Quantify class imbalance, source missingness and operating-condition coverage | EDA tables and plots |
+| ML-04 | Create train/validation/test separated by vehicle | Split manifest and no overlapping vehicle IDs |
+| ML-05 | Extract historical statistical and time-series features | Documented code and feature dictionary |
+| ML-06 | Train naive and meaningful comparison baselines | Experiment logs |
+| ML-07 | Compare a justified stronger model family | Controlled metrics on same split |
+| ML-08 | Evaluate PR-AUC, precision, recall, F1, confusion matrix and false alarms | Independent test report |
+| ML-09 | Document feature influence, calibration and limitations | Interpretation report |
+| ML-10 | Produce reproducible notebooks, technical report and presentation | BDAPP deliverables |
 
-## Requirement traceability
-FR-01–04, FR-11 → M2/M3; FR-05–07, FR-09–10 → M4/M6; FR-08 → M5; FR-12 → M7.
+## Nonfunctional research requirements
+- Provenance, licensing and data-version traceability.
+- No train/test leakage by vehicle, time or preprocessing fit.
+- Fixed random seeds and dependency listing.
+- Memory-aware processing of >1 GB research dataset.
+- Clear distinction among binary vehicle-level risk, time-bounded fault prediction and present-time diagnosis.
+- Never claim a numeric failure horizon without labels that support it.
+- Standard names: snake_case code, numbered notebooks, versioned documentation.
 
-## Safety boundary
-The system is informational and research-oriented, does not interpret every unusual observation as a fault and does not replace professional vehicle diagnostics.
+## Not required for this course
+User registration, backend API, dashboard/frontend, live CAN/OBD-II integration, vehicle commands, maintenance scheduling platform or automated repairs.

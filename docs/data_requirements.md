@@ -1,42 +1,36 @@
-# Data Requirements and Sensor Dictionary
-**Document ID:** HC-DAT-001 · **Version:** 1.0 · **Baseline:** 2026-10-16
+# Prediction Data Requirements — HealthCar
+**Document ID:** HC-DAT-001 · **Version:** 1.1 · **Baseline:** 2026-10-16
 
-## SCUT passenger EV source schema
-The following field definitions are from the [SCUT publisher's documentation](https://github.com/Translab-SCUT/Electric-vehicle-operation-data); the empirical archive-level validation belongs to M2.
+## Primary dataset (Zhang et al. 2023)
+**Source:** https://doi.org/10.6084/m9.figshare.23659323
 
-| Source field | Intended meaning | Unit / interpretation | Monitoring use |
-|---|---|---|---|
-| `Time` | Acquisition timestamp | Verify parsed timezone and interval | Trend/order/gaps |
-| `vhc_speed` | Vehicle speed | km/h | Operating condition |
-| `charging_signal` | Source mode indicator | 1 = charging; 3 = driving | Context segmentation |
-| `vhc_totalMile` | Cumulative distance | km | Usage exposure |
-| `hv_voltage` | Battery pack voltage | V | Electrical signal |
-| `hv_current` | Battery pack current | A; sign to verify | Electrical signal |
-| `bcell_soc` | Battery state of charge | Scale/range to verify | Charge context |
-| `bcell_maxVoltage` | Highest cell voltage | V | Voltage variation |
-| `bcell_minVoltage` | Lowest cell voltage | V | Voltage variation |
-| `bcell_maxTemp` | Highest cell temperature | °C | Thermal variation |
-| `bcell_minTemp` | Lowest cell temperature | °C | Thermal variation |
+Required metadata:
+- `vehicle_id` (or equivalent consistent per-vehicle grouping), identifying independent evaluation units.
+- A validated vehicle-level fault label; fault types/notes where actually available.
+- Chronological sequence/index for earlier charging snippets.
+- Recorded available electrical/thermal signals (paper describes current, voltage and temperature histories).
+- Event/verification timestamp *if present*; otherwise a fixed-day horizon is not measurable.
+- Per-record/session source information and author data transformation notes.
 
-## Conservative derived indicators
-- `cell_voltage_spread_V = bcell_maxVoltage - bcell_minVoltage`
-- `cell_temperature_spread_C = bcell_maxTemp - bcell_minTemp`
-- `battery_power_W_unverified_sign = hv_voltage * hv_current`
-- Mode-conditioned, time-aware rolling medians and slopes **after** irregular timestamps are resolved.
+The original column names and label encoding are **not yet verified**; generic names above describe modeling requirements rather than claiming they are dataset columns.
 
-These are monitoring descriptors, not validated battery damage thresholds or SOH estimators.
+## Derived ML features (after source inspection)
+- Statistical summaries of voltage, current, temperature.
+- Trends, range/spread, rates and rolling features over valid historical windows.
+- Charging-session frequency, coverage and duration, if recorded.
+- Time-aware aggregates at vehicle level.
+- Missingness and measurement-coverage indicators where informative and non-leaky.
 
-## PMSM experimental source schema
-Zenodo's 3.0 archive is expected to provide eight core measured inputs such as phase currents (`Ia`, `Ib`), DC-bus voltage/current (`VDC`, `IDC`), half-bridge temperatures (`T1`–`T3`) and gate-driver voltage (`VD`); class label `FDD` may be present in processed data. **Exact file-level spellings, meanings, labels and units must be verified from downloaded metadata.** Derived features need target leakage checks.
+## Ground-truth and leakage requirements
+- A target `y` must be grounded in the publisher's verified labels, never manufactured from rule thresholds.
+- Same-vehicle snippets must not appear in train and test.
+- No use of diagnostic observations taken at or after a target event.
+- Do not fit preprocessing on held-out vehicles or all timestamps together.
+- Label grouping and temporal windows should be frozen before final model comparison.
 
-## Data acceptance requirements
-1. Preserve originals, metadata and extraction source; compute/check archive checksums where possible.
-2. Document missing and infinite values before transforming them.
-3. Parse and sort time correctly; flag repeated timestamps and long gaps.
-4. Preserve operating-mode codes and mark unrecognized values as unknown.
-5. Document source-specific labels and their unit of prediction (sample, experiment or vehicle).
-6. Avoid mixing data from different battery chemistries without explicit context.
-7. Keep unrelated component fields as `unavailable` rather than imputing them.
+## Supporting datasets
+- **SCUT:** source variables include `Time`, `vhc_speed`, `charging_signal`, `vhc_totalMile`, `hv_voltage`, `hv_current`, `bcell_soc`, `bcell_maxVoltage`, `bcell_minVoltage`, `bcell_maxTemp`, `bcell_minTemp`. Useful for supporting analysis only.
+- **PMSM:** inverter rig inputs `Ia`, `Ib`, `VDC`, `IDC`, `T1`, `T2`, `T3`, `VD`, `FDD` where confirmed; optional separate fault diagnosis.
 
-## Boundaries
-These inputs alone do not establish verified battery SOH, RUL, future failure times, motor condition on public roads, tire/brake wear or coolant system faults.
+## Data governance
+Record publisher/source DOI, usage terms, versions/hashes, train/validation/test group IDs and measured sample counts. Large primary archives remain Git-ignored.

@@ -1,61 +1,46 @@
-# Project Charter — HealthCar
-**Document ID:** HC-CH-001  
-**Version:** 1.0  
-**Status:** Approved planning baseline  
-**Date:** 2026-10-16
+# HealthCar — Project Charter
+**Document ID:** HC-CH-001 · **Version:** 1.1 · **Status:** Final BDAPP planning baseline · **Date:** 2026-10-16
 
-## 1. Project identity
-- **Name:** HealthCar
-- **Formal title:** Electric Vehicle Health Monitoring and Predictive Maintenance System
-- **Domain:** Applied machine learning, automotive telemetry, fault diagnosis
-- **Primary user:** Owners of passenger battery-electric vehicles (BEVs)
-- **Product type:** Non-autonomous, read-only research decision-support prototype
+## Project identity
+**Title:** Machine Learning-Based Electric Vehicle Fault Prediction and Predictive Maintenance  
+**Discipline:** Big Data Analysis and Prediction Project (BDAPP)  
+**Domain:** EV time-series analysis, imbalanced classification, early-warning prediction  
+**Deliverable type:** ML research pipeline, reproducible experiments and evaluation report.
 
-## 2. Problem
-Battery-electric vehicles produce operating telemetry that can reveal charge state, electrical load, thermal behavior, and potential anomalies. Useful interpretations are not always accessible or consistent across vehicles. A system is needed to organize the *available* measurements, detect unusual behavior in context, and communicate the evidence and uncertainty to the owner.
+## Problem statement
+Potential battery problems may be preceded by subtle historical changes in voltage, current and temperature. Detecting such predictive signals from real-world charging histories is difficult due to irregular sampling, heterogeneous operating conditions, rare events and possible validation leakage. A comparative, reproducible study is needed to determine whether ML can identify at-risk EVs from historical telemetry.
 
-## 3. Goal
-Design and implement a reproducible ML-assisted prototype that (a) monitors available EV telemetry, (b) detects contextual anomalies, (c) investigates classifiable component faults with suitable labels, and (d) explains findings and recommendations. Future-failure risk estimation is undertaken only when data provide verified historical events and a defensible test protocol.
+## Main research objective
+**Train and evaluate predictive ML models on pre-fault EV charging history to identify vehicles at elevated risk of subsequently confirmed battery faults.** A fixed N-day failure-horizon target will be used only if actual label timestamps support it; otherwise the primary target is vehicle-level early fault-risk classification, not time-to-failure.
 
-## 4. Research questions
-- RQ1: What operating and battery-condition indicators can be computed from publicly available passenger-EV signals?
-- RQ2: How robustly can atypical sensor behavior be identified without verified fault labels?
-- RQ3: How accurately can laboratory inverter conditions be classified under a leakage-aware evaluation protocol?
-- RQ4: Can model evidence be communicated in an honest, non-autonomous driver-facing interface?
-- RQ5 (conditional): Can labeled real-EV battery records support early-warning estimates at a predefined horizon?
+## Research questions
+- RQ1: Which historical charging and thermal/electrical features are informative for future battery-fault risk?
+- RQ2: Which classification approaches generalize best to independently held-out vehicles?
+- RQ3: What are the effects of imbalance, aggregation window, and decision threshold on missed faults and false alarms?
+- RQ4: How interpretable and calibrated are model outputs?
+- RQ5: Is a time-specific lead-time forecast feasible from the available metadata?
 
-## 5. Objectives and deliverables
-| Objective | Deliverable |
-|---|---|
-| O1: Define reproducible data provenance and quality standards | Source registry, statistical audits, data dictionary |
-| O2: Establish EV monitoring baseline | Feature pipeline and context-aware anomaly analysis |
-| O3: Evaluate component fault classification | PMSM laboratory baseline and confusion matrix |
-| O4: Create explainable prototype | Read-only telemetry replay dashboard and evidence-based alerts |
-| O5: Evaluate future-risk feasibility | Go/no-go memo; only train if labels and lead times are verifiable |
-| O6: Demonstrate engineering quality | Versioned Git repository, tests, runbook and reproducible demo |
+## Primary hypothesis
+History-aware models provide better early risk discrimination than an appropriate prior-probability or simple-feature baseline, under vehicle-disjoint evaluation. This is a **hypothesis to test**, not a claimed result.
 
-## 6. MVP scope
-**Included:** CSV ingestion, data-quality validation, battery/operating monitoring from available signals, exploratory anomaly detection, independently evaluated laboratory PMSM fault classification, readable explanations, read-only replay UI.
+## Primary dataset
+Zhang et al. (2023), *Realistic fault detection of li-ion battery via dynamical deep learning*, publicly released processed data: https://doi.org/10.6084/m9.figshare.23659323. Publisher reports three collections, >690,000 charging snippets from 347 EVs and vehicle-level fault annotations. **Actual file schema, vehicle IDs and label timing must be checked before defining final outcome and horizon.**
 
-**Deferred:** Live vehicle integration, other component-specific diagnosis without relevant datasets, battery SOH/RUL where ground truth is absent, validated future-failure estimates until the external labels have been reviewed.
+## Supporting data
+SCUT: exploratory EV telemetry and features, no future fault ground truth. PMSM: optional independent, labeled **laboratory current-fault classification** study. Neither replaces the primary prediction experiment.
 
-**Excluded:** Automatic control or repair, replacement for OEM safety systems, guaranteed vehicle-brand coverage, clinical/safety certifications or advice to work on high-voltage components.
+## In scope
+Dataset/label audit; EDA; time-series feature engineering; data leakage prevention; class imbalance mitigation; classification baselines and advanced models where justified; group-aware cross-validation; evaluation; interpretability; scientific report and presentation.
 
-## 7. Constraints and operating assumptions
-- SCUT provides real passenger-EV telemetry; available fields are restricted to publisher-documented signals. Verified failure dates are not supplied in the selected SCUT data.
-- PMSM is a labeled lab-system dataset and cannot directly demonstrate performance on road-going EVs.
-- Sensor availability, units and diagnostic access vary by vehicle.
-- Open third-party data may be analyzed under applicable source terms; archives are not committed to the repository.
-- Implementation starts with offline CSV/replay and never claims continuous live monitoring before integration.
+## Out of scope
+Production EV health application, dashboards as deliverables, FastAPI/backend, OBD-II hardware, live monitoring, vehicle control, universal multi-component future-failure claims.
 
-## 8. Acceptance criteria for MVP
-1. A third party can set up the environment and reproduce all published results from documented data sources.
-2. Raw-data provenance, schema, units, missingness, non-finite values, timestamp issues and known data gaps are recorded.
-3. Monitoring outputs reflect measured signals and operating context, with alert limitations clearly shown.
-4. PMSM metrics, if included, use documented independent evaluation and include class-wise results.
-5. The dashboard distinguishes **observed measurement**, **statistical anomaly**, **model hypothesis** and **confirmed fault**.
-6. No automatic actuation or autonomous repair is implemented.
-7. Tests pass on the main branch, and repository documentation reflects actual project status.
+## Completion criteria
+- A clearly validated target and dataset provenance.
+- A documented vehicle-disjoint split and leakage prevention.
+- At least one naive baseline and two substantive candidate prediction approaches.
+- Reproducible metrics with precision/recall/F1/PR-AUC, confusion matrix and threshold analysis.
+- Scientifically defensible conclusions, model limitations, notebooks and BDAPP presentation.
+- If predictive ground truth is insufficient, explicit feasibility revision instead of false claims.
 
-## 9. Completion decision
-**Phase 1 — Ideation & Project Planning: COMPLETE (2026-10-16).** The vision, use cases, MVP boundaries, architecture, data strategy, evaluation requirements, milestones and principal risks are defined. Dataset empirical quality and model results remain delivery tasks under later phases, not unfinished planning.
+**Ideation and Project Planning is COMPLETE. Model building and empirical feasibility are subsequent stages.**

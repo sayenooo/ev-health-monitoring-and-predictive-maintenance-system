@@ -1,71 +1,52 @@
-# System Architecture — HealthCar
-**Document ID:** HC-ARC-001 · **Version:** 1.0 · **Baseline:** 2026-10-16
+# ML Experiment Architecture — HealthCar
+**Document ID:** HC-ARC-001 · **Version:** 1.1 · **Baseline:** 2026-10-16
 
-## Architectural principles
-1. Read-only, offline-first and reproducible.
-2. Separate raw telemetry, feature pipelines, modeling and human-facing explanations.
-3. Keep the source/evaluation boundary between SCUT real EV telemetry and PMSM laboratory fault data.
-4. Prefer interpretable baselines; use more complex models only when clearly justified.
-5. Fail visibly for missing/invalid signals; do not invent unavailable measurements.
-
-## Logical flow
+## Prediction-first flow
 
 ```text
-Publisher CSV/ZIP sources
-       |
-       v
-[Acquisition & provenance] --> data/raw/ (local only)
-       |
-       v
-[Schema / timestamp / quality validation] --> data/reports/
-       |
-       v
-[Context-aware preprocessing + features] --> data/processed/
-       |
-       +---------- SCUT track ---------+
-       |                               |
-       v                               v
-[EV monitoring baseline]        [Exploratory anomaly model]
-       |                               |
-       +---------------+---------------+
-                       |
-                       v
-             [Alert evidence interface]
-                       |
-                       v
-           [Read-only HealthCar dashboard]
+Published processed EV charging/fault records (Zhang et al.)
+        |
+        v
+[Source inventory + vehicle-level labels + chronology]
+        |
+        v
+[Quality audit + target/horizon feasibility]
+        |
+        v
+[Vehicle-disjoint train / validation / test split]
+        |
+        v
+[Historical feature extraction and train-only preprocessing]
+        |
+        +----------------------+----------------------+
+        |                      |                      |
+        v                      v                      v
+[Dummy / linear]        [Tree / boosting]      [Optional sequence]
+        |                      |                      |
+        +----------------------+----------------------+
+                               |
+                               v
+                    [Independent test comparison]
+                               |
+                               v
+                [PR-AUC / recall / precision / F1]
+                               |
+                               v
+             [Interpretation + technical report + slides]
 
-Separately:
-PMSM lab files --> lab-data validation --> lab classifier --> lab-only model report
-
-Optional later:
-Labeled real EV histories --> label/horizon audit --> future-risk experiment
+Auxiliary: SCUT --> real-vehicle signal characterization.
+Optional: PMSM --> separate laboratory fault classification experiment.
 ```
 
-## Responsibility boundaries
-| Component | Responsibility | Initial implementation |
-|---|---|---|
-| Dataset downloader | Publisher retrieval, archive verification, extraction | `scripts/download_data.py` |
-| Data audit | Table discovery, quality reports, conservative derived signals | `src/healthcar/audit.py` |
-| Dataset notebooks | Inspection and interpretation; no production logic | `notebooks/01_scut_data_audit.ipynb` and `02_pmsm_data_audit.ipynb` |
-| Preprocessing package | Future: validated transformations and split manifests | P3 |
-| Monitoring models | Future: contextual baselines, model artifacts and evaluation | P4 |
-| PMSM classifier | Future: labeled laboratory classification | P5 |
-| Application layer | Future: telemetry replay and read-only dashboard | P6 |
-| Future-risk research | Conditional separate validation and integration | P7 |
+## Main deliverables
+- Dataset, target and split specification.
+- EDA and preprocessing notebooks.
+- Baseline/model comparison notebooks.
+- Reproducible metrics and error analysis.
+- BDAPP research report / presentation.
 
-## Proposed interface contracts (for later implementation)
-**Telemetry observation:** `source_id`, `vehicle_id` (if provided), `timestamp`, `signal_name`, `value`, `unit`, `data_quality`, `operating_mode`.
+## Design rules
+Use vehicle-level grouping for validation, prevent overlapping temporal information, fit transformations exclusively within training partitions and document missing sensors. A numeric 'fault within N days' endpoint must not be introduced before verifying event timestamps. SCUT and PMSM are separate evidence tracks, not replacements for labeled future-fault outcomes.
 
-**Model alert:** `alert_id`, `timestamp`, `component`, `alert_type`, `evidence`, `score`, `confidence_status`, `data_source`, `model_version`, `recommendation`.
-
-These are **design contracts**, not claims of implemented endpoints.
-
-## Storage and access
-- `data/raw/`: official archives and extracted source data; Git-ignored.
-- `data/processed/`: derived datasets; Git-ignored.
-- `data/reports/`: local audit/EDA outputs; Git-ignored.
-- Commit Python code, Markdown docs, notebooks without private source data and tests.
-
-## Future integration
-Live OBD-II or an OEM-compatible API may be added only after vehicle-specific signal availability and protocol permissions are verified. The MVP uses offline telemetry replay.
+## No application layer required
+API services, live OBD-II, continuous vehicle monitoring and production dashboards are not part of the BDAPP core.

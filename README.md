@@ -1,62 +1,56 @@
 # HealthCar
+## Machine Learning-Based Electric Vehicle Fault Prediction and Predictive Maintenance
 
-**Electric Vehicle Health Monitoring and Predictive Maintenance System**
+**Course:** Big Data Analysis and Prediction Project (BDAPP)  
+**Project type:** Applied machine learning research — prediction first, not a software platform.  
+**Planning baseline:** v1.1 · 2026-10-16 · COMPLETE  
+**Current milestone:** M2 — prediction-label and dataset feasibility audit.
 
-HealthCar is a research-oriented, read-only decision-support prototype for passenger battery-electric vehicles. It processes available vehicle telemetry, explores anomalous operating patterns, and studies fault diagnosis with appropriately labeled component data. Predictive maintenance is a **conditional research workstream**, evaluated only when verified historical failure data support it.
+### Research goal
 
-**Project phase:** Planning baseline approved; dataset characterization in progress.  
-**Latest verified progress:** Local SCUT and PMSM downloads plus preliminary audit completed; full source coverage and data-quality findings pending.
+Develop, compare and independently evaluate machine learning models that use **historical electric vehicle sensor recordings** to identify vehicles at risk of **subsequently confirmed battery faults**. The primary outcome is a reproducible predictive experiment with defensible validation, rather than a production dashboard.
 
-## Start here
+### Dataset roles
 
-- [Project charter](docs/project_charter.md) — final problem definition, scope, goals and success criteria.
-- [Project plan](docs/project_plan.md) — stages, deliverables, acceptance gates and dependencies.
-- [Progress tracker](docs/progress_tracker.md) — dated evidence log and task checkboxes.
-- [System requirements](docs/system_requirements.md) — functional and nonfunctional requirements.
-- [Architecture](docs/architecture.md) — modules, data flow and boundaries.
-- [Data requirements](docs/data_requirements.md) and [dataset feasibility](docs/dataset_feasibility.md).
-- [Evaluation protocol](docs/evaluation_plan.md), [research sources](docs/references.md) and [repository conventions](docs/repository_conventions.md).
+| Source | Role | Supported claim |
+|---|---|---|
+| [Zhang et al. 2023 processed EV charging data](https://figshare.com/articles/dataset/23659323) | **Primary prediction dataset candidate** (347 EVs; vehicle-level confirmed battery problem labels) | Historical charging records used to identify at-risk vehicles; exact forecast horizon requires label/timestamp audit |
+| [SCUT EV operation data](https://github.com/Translab-SCUT/Electric-vehicle-operation-data) | Supporting exploration of EV telemetry and feature engineering | Historical monitoring signals; **no verified future-fault target** |
+| [PMSM inverter-fault data](https://zenodo.org/records/14482932) | Optional, separate lab fault-classification comparison | Supervised diagnosis of lab conditions; **not future vehicle-failure prediction** |
 
-## Research tracks
+**Core prediction question:** Can historical charging telemetry distinguish EVs that later experience a confirmed battery fault from those without an observed fault, on independently held-out vehicles?
 
-| Track | Primary dataset | Objective | Evidence boundary |
-|---|---|---|---|
-| Vehicle telemetry | SCUT passenger EV #1; optional #7 | Data characterization, monitoring and exploratory anomaly detection | No published verified future-failure labels |
-| Inverter diagnostics | Zenodo PMSM inverter fault dataset | Experimental supervised classification | Laboratory system; requires leakage-safe validation |
-| Battery early warning | Zhang et al. (2023) processed EV charging data | Conditional future-risk research | Separate label, licensing and prediction-horizon review |
+### Main ML deliverables
 
-## Repository structure
+1. Dataset provenance, label analysis and target definition.
+2. EDA, imbalance assessment and leakage-safe splits.
+3. Reproducible feature engineering and temporal aggregation.
+4. Baseline models (e.g., DummyClassifier / logistic regression / random forest).
+5. Advanced comparison where justified (e.g., gradient boosting and a sequence model).
+6. Honest out-of-sample comparison: PR-AUC, recall, precision, F1, confusion matrix, calibration and, if event timing is verified, lead time.
+7. Interpretation, limitations, scientific report, presentation and clean notebooks.
+
+**No production frontend, API, OBD hardware, automated recommendations or live-vehicle integration is required for BDAPP.** A small static visualization may help present results but is not an objective.
+
+### Repository map
 
 ```text
-docs/                 Approved plan, requirements, architecture and evaluation
-notebooks/            Dataset exploration (01 SCUT, 02 PMSM)
-scripts/              Local dataset acquisition and audit
-src/healthcar/        Reusable Python utilities
-tests/                Unit tests on synthetic fixtures
-data/raw/             Local source archives (Git-ignored)
-data/processed/       Local intermediate datasets (Git-ignored)
-data/reports/         Generated audit reports (Git-ignored)
-.github/workflows/    Automated tests
+docs/          charter, BDAPP plan, requirements, source feasibility, evaluation, progress
+notebooks/     early supporting dataset audits (SCUT and PMSM)
+scripts/       existing source download and statistical audit utilities
+src/healthcar/ reusable data-audit functions
+tests/         reproducibility / data-audit tests
+data/          original/derived local data; Git-ignored
 ```
 
-## Quick start (Windows, Python 3.10+)
+**Next step:** Audit the primary [processed fault dataset on Figshare](https://figshare.com/articles/dataset/23659323) and verify that its vehicle identifiers and labels permit the stated task. It is approximately 1.38 GB and is **not** downloaded by the existing SCUT/PMSM script. Do not train before checking the label/time semantics.
 
-Download this repository, extract it, open Command Prompt in the project directory, then run:
+### Documents
 
-```bat
-py -m venv .venv
-.venv\Scripts\python.exe -m pip install -r requirements.txt
-.venv\Scripts\python.exe scripts\download_data.py
-.venv\Scripts\python.exe scripts\run_audit.py --dataset both
-.venv\Scripts\python.exe -m jupyter notebook
-```
+[Project charter](docs/project_charter.md) · [Project plan](docs/project_plan.md) · [Progress tracker](docs/progress_tracker.md) · [Data requirements](docs/data_requirements.md) · [Dataset feasibility](docs/dataset_feasibility.md) · [Evaluation plan](docs/evaluation_plan.md) · [References](docs/references.md) · [Naming conventions](docs/repository_conventions.md)
 
-Windows helpers: `scripts/setup_windows.bat` and `scripts/start_notebooks_windows.bat`. For subsequent sessions, only the final Jupyter command is needed. In Jupyter, open `notebooks/01_scut_data_audit.ipynb`.
+### Supporting audits already executable
 
-**Data distribution:** Third-party datasets and generated reports are not tracked by Git. Download them from original publishers using `scripts/download_data.py` and review the [source registry](docs/dataset_feasibility.md). Record dataset provenance and redistribution conditions before sharing raw data.
+The existing Windows setup used `requirements.txt`, `scripts/download_data.py` and `scripts/run_audit.py` successfully for SCUT and PMSM. Those supporting datasets are locally downloaded on the user's computer; **the primary fault dataset has not yet been audited**.
 
-**Research integrity:** An anomaly score is not a diagnosed fault. Model performance is not claimed without an independent test set. This project does not control vehicle hardware or replace professional inspection.
-
-## License and citations
-
-Dataset ownership and terms remain with the original publishers. See [References](docs/references.md) for source links and DOI records. No software license has been selected yet; until a license is added, source reuse is not automatically authorized.
+Third-party datasets stay outside Git. Model quality, future-risk horizons and automotive deployment claims must never be fabricated.
