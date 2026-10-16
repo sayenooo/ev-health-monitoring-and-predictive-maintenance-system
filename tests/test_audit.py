@@ -42,3 +42,40 @@ def test_dataset_file_discovery(tmp_path):
     source, candidates = discover_dataset("scut1", root)
     assert source.name == "vehicle.csv"
     assert candidates[0]["matched_features"] >= 3
+
+def test_partial_read_warning_only_at_limit(tmp_path):
+    df = pd.DataFrame({
+        "Ia": [1.0, 2.0, 3.0],
+        "Ib": [2.0, 3.0, 4.0],
+        "FDD": [0, 0, 1],
+    })
+    full = audit("pmsm", df, tmp_path / "lab.csv", max_rows=250000)
+    assert full["sampled_first_rows"] is False
+    assert not any("first rows" in w for w in full["warnings"])
+
+    limited = audit("pmsm", df, tmp_path / "lab.csv", max_rows=3)
+    assert limited["sampled_first_rows"] is True
+    assert any("first rows" in w for w in limited["warnings"])
+
+
+def test_infinities_are_detected_without_imputation(tmp_path):
+    import numpy as np
+    from healthcar.audit import write_report
+
+    raw = tmp_path / "data" / "pmsm"
+    raw.mkdir(parents=True)
+    pd.DataFrame({
+        "Ia": [1.0, np.inf, -np.inf],
+        "Ib": [2.0, 3.0, 4.0],
+        "VDC": [350.0, 355.0, 360.0],
+        "FDD": [0, 1, 2],
+    }).to_csv(raw / "sensor.csv", index=False)
+    report, original = write_report(
+        "pmsm", max_rows=100,
+        raw_root=tmp_path / "data",
+        reports_dir=tmp_path / "reports",
+    )
+    assert report["infinite_counts"]["Ia"] == 2
+    assert original["Ia"].isin([np.inf, -np.inf]).sum() == 2
+    assert report["sampled_first_rows"] is False
+    assert (tmp_path / "reports" / "pmsm_summary.csv").exists()
