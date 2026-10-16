@@ -54,7 +54,9 @@ data/            raw/, processed/, reports/ (local; ignored by Git)
 - No automated vehicle actuation, DIY high-voltage repair, or safety-critical autonomous advice.
 
 ## Documentation
-Read [Project Vision](docs/project_vision.md) → [Data Requirements](docs/data_requirements.md) → [Dataset Feasibility](docs/dataset_feasibility.md) → [Evaluation Plan](docs/evaluation_plan.md).
+**Start here:** [Practical Project Plan — current stage, checklist, and next action](docs/project_plan.md).
+
+Then read [Project Vision](docs/project_vision.md) → [Data Requirements](docs/data_requirements.md) → [Dataset Feasibility](docs/dataset_feasibility.md) → [Evaluation Plan](docs/evaluation_plan.md).
 
 ## Research sources
 - [SCUT EV operation data](https://github.com/Translab-SCUT/Electric-vehicle-operation-data)
