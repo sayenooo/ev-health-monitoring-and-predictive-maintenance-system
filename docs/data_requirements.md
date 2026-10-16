@@ -1,36 +1,30 @@
-# Prediction Data Requirements — HealthCar
-**Document ID:** HC-DAT-001 · **Version:** 1.1 · **Baseline:** 2026-10-16
+# Data Requirements — HealthCar
+**Document ID:** HC-DAT-001 · **Version:** 2.0 · **Baseline:** 2026-10-16
 
-## Primary dataset (Zhang et al. 2023)
-**Source:** https://doi.org/10.6084/m9.figshare.23659323
+## Monitoring track (current sensor state)
+Required records: `timestamp`, source/vehicle identifier where available, sensor values, units, operating mode, quality flags. Each new observation is incorporated into a rolling time-series window.
 
-Required metadata:
-- `vehicle_id` (or equivalent consistent per-vehicle grouping), identifying independent evaluation units.
-- A validated vehicle-level fault label; fault types/notes where actually available.
-- Chronological sequence/index for earlier charging snippets.
-- Recorded available electrical/thermal signals (paper describes current, voltage and temperature histories).
-- Event/verification timestamp *if present*; otherwise a fixed-day horizon is not measurable.
-- Per-record/session source information and author data transformation notes.
+SCUT publisher-documented fields: `Time`, `vhc_speed`, `charging_signal`, `vhc_totalMile`, `hv_voltage`, `hv_current`, `bcell_soc`, `bcell_maxVoltage`, `bcell_minVoltage`, `bcell_maxTemp`, `bcell_minTemp`. Verify actual encodings/units/time gaps before modeling. Derive `cell_voltage_spread_V`, `cell_temperature_spread_C`, and a signed electrical-power proxy only after checking current conventions.
 
-The original column names and label encoding are **not yet verified**; generic names above describe modeling requirements rather than claiming they are dataset columns.
+## Predictive maintenance track (future target)
+Required:
+- Identifiers grouping all observations for each source vehicle.
+- Chronological historical sensor readings and observation cutoffs.
+- Verified later fault event or a defensible at-risk label tied to prior history.
+- Label semantics, component type and date of verification when available.
+- Enough fault-positive and reference vehicles for independent validation.
 
-## Derived ML features (after source inspection)
-- Statistical summaries of voltage, current, temperature.
-- Trends, range/spread, rates and rolling features over valid historical windows.
-- Charging-session frequency, coverage and duration, if recorded.
-- Time-aware aggregates at vehicle level.
-- Missingness and measurement-coverage indicators where informative and non-leaky.
+Candidate data: Zhang et al. historical real-EV charging/fault corpus. Actual raw field names and event chronology are **not yet audited**. A fixed horizon such as `fault_within_7_days` may not be defined unless event timestamps support it.
 
-## Ground-truth and leakage requirements
-- A target `y` must be grounded in the publisher's verified labels, never manufactured from rule thresholds.
-- Same-vehicle snippets must not appear in train and test.
-- No use of diagnostic observations taken at or after a target event.
-- Do not fit preprocessing on held-out vehicles or all timestamps together.
-- Label grouping and temporal windows should be frozen before final model comparison.
+## Feature families
+Rolling means/medians, maxima/minima, spreads, slopes, rates of change, variability, charging context and coverage, to the extent supported by each instrument. Features must use only current/past data, never future measurements.
 
-## Supporting datasets
-- **SCUT:** source variables include `Time`, `vhc_speed`, `charging_signal`, `vhc_totalMile`, `hv_voltage`, `hv_current`, `bcell_soc`, `bcell_maxVoltage`, `bcell_minVoltage`, `bcell_maxTemp`, `bcell_minTemp`. Useful for supporting analysis only.
-- **PMSM:** inverter rig inputs `Ia`, `Ib`, `VDC`, `IDC`, `T1`, `T2`, `T3`, `VD`, `FDD` where confirmed; optional separate fault diagnosis.
+## Quality and split requirements
+- Source file inventory, provenance and checksums.
+- Nulls, non-finite values, implausible readings, duplicates and sample gaps.
+- Operating-mode semantics, sensor unit verification and missing-channel handling.
+- Vehicle-disjoint and time-aware train/validation/test.
+- Imbalance analysis and baseline comparison.
 
-## Data governance
-Record publisher/source DOI, usage terms, versions/hashes, train/validation/test group IDs and measured sample counts. Large primary archives remain Git-ignored.
+## Component scope
+The system concept covers vehicle-wide EV health. A module is only claimed to be empirically validated if its relevant sensor inputs and fault events are available. Uninstrumented components are reported as unavailable rather than inferred without evidence.

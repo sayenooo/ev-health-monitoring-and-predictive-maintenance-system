@@ -1,46 +1,64 @@
-# HealthCar — Project Charter
-**Document ID:** HC-CH-001 · **Version:** 1.1 · **Status:** Final BDAPP planning baseline · **Date:** 2026-10-16
+# Project Charter — HealthCar
+**Document ID:** HC-CH-001  
+**Version:** 2.0  
+**Status:** FINAL — IDEATION COMPLETE  
+**Approved baseline:** 2026-10-16  
+**Course:** Big Data Analysis and Prediction Project (BDAPP)
 
-## Project identity
-**Title:** Machine Learning-Based Electric Vehicle Fault Prediction and Predictive Maintenance  
-**Discipline:** Big Data Analysis and Prediction Project (BDAPP)  
-**Domain:** EV time-series analysis, imbalanced classification, early-warning prediction  
-**Deliverable type:** ML research pipeline, reproducible experiments and evaluation report.
+## 1. Official project title
+**HealthCar: Electric Vehicle Health Monitoring and Predictive Maintenance System**
 
-## Problem statement
-Potential battery problems may be preceded by subtle historical changes in voltage, current and temperature. Detecting such predictive signals from real-world charging histories is difficult due to irregular sampling, heterogeneous operating conditions, rare events and possible validation leakage. A comparative, reproducible study is needed to determine whether ML can identify at-risk EVs from historical telemetry.
+## 2. Main objective (fixed)
+**To develop a machine learning-based system that continuously monitors electric vehicle health using sensor data, detects abnormal operating conditions, predicts potential future failures, and provides early warnings to support preventive maintenance.**
 
-## Main research objective
-**Train and evaluate predictive ML models on pre-fault EV charging history to identify vehicles at elevated risk of subsequently confirmed battery faults.** A fixed N-day failure-horizon target will be used only if actual label timestamps support it; otherwise the primary target is vehicle-level early fault-risk classification, not time-to-failure.
+## 3. Problem statement
+Electric vehicles generate time-dependent measurements of electrical, thermal and operating conditions. Deviations may indicate an emerging issue, yet individual readings can be normal for one condition and suspicious for another. Historical changes may also contain signals preceding future faults. HealthCar studies whether machine learning can analyze **incoming telemetry plus its recent history** to identify unusual conditions and predict documented future maintenance risks with appropriate uncertainty.
 
-## Research questions
-- RQ1: Which historical charging and thermal/electrical features are informative for future battery-fault risk?
-- RQ2: Which classification approaches generalize best to independently held-out vehicles?
-- RQ3: What are the effects of imbalance, aggregation window, and decision threshold on missed faults and false alarms?
-- RQ4: How interpretable and calibrated are model outputs?
-- RQ5: Is a time-specific lead-time forecast feasible from the available metadata?
+## 4. Intended operation
+1. Receive time-ordered sensor measurements.
+2. Validate and accumulate a rolling history window.
+3. Estimate current health indicators and detect abnormal behavior.
+4. Predict future fault risk where temporally appropriate verified labels exist.
+5. Generate explainable alerts for the vehicle owner.
+6. Repeat these steps as new measurements arrive.
 
-## Primary hypothesis
-History-aware models provide better early risk discrimination than an appropriate prior-probability or simple-feature baseline, under vehicle-disjoint evaluation. This is a **hypothesis to test**, not a claimed result.
+**Continuous** means repeated inference over new observations. It does not require the model to update its weights online. An offline replay of chronological telemetry is the initial BDAPP demonstration; live vehicle hardware integration may follow in later research.
 
-## Primary dataset
-Zhang et al. (2023), *Realistic fault detection of li-ion battery via dynamical deep learning*, publicly released processed data: https://doi.org/10.6084/m9.figshare.23659323. Publisher reports three collections, >690,000 charging snippets from 347 EVs and vehicle-level fault annotations. **Actual file schema, vehicle IDs and label timing must be checked before defining final outcome and horizon.**
+## 5. Research questions
+- RQ1: Which telemetry features and operating context indicate abnormal EV behavior?
+- RQ2: Which methods detect anomalies effectively without treating all outliers as confirmed faults?
+- RQ3: Can historical time-series windows predict a *subsequently documented* component fault or elevated future risk?
+- RQ4: How do different models trade detection lead time, false warnings and missed failures?
+- RQ5: How can uncertainty and evidence be conveyed in a clear early-warning output?
 
-## Supporting data
-SCUT: exploratory EV telemetry and features, no future fault ground truth. PMSM: optional independent, labeled **laboratory current-fault classification** study. Neither replaces the primary prediction experiment.
+## 6. Scope
+**Core Track A — Continuous EV health monitoring**
+Time-series ingestion/replay, quality checks, contextual indicators, anomaly model/baseline, repeated scoring and anomaly alerts.
 
-## In scope
-Dataset/label audit; EDA; time-series feature engineering; data leakage prevention; class imbalance mitigation; classification baselines and advanced models where justified; group-aware cross-validation; evaluation; interpretability; scientific report and presentation.
+**Core Track B — Predictive maintenance**
+Define a historically verifiable target; construct features from pre-event windows; train and compare supervised temporal/fault-risk models; quantify early warning accuracy and lead time *if event time is available*.
 
-## Out of scope
-Production EV health application, dashboards as deliverables, FastAPI/backend, OBD-II hardware, live monitoring, vehicle control, universal multi-component future-failure claims.
+**Core Track C — Early warning**
+Combine monitoring and predictive signals into interpretable evidence-based notifications and preventive-maintenance suggestions. A modest notebook/visual demo is sufficient.
 
-## Completion criteria
-- A clearly validated target and dataset provenance.
-- A documented vehicle-disjoint split and leakage prevention.
-- At least one naive baseline and two substantive candidate prediction approaches.
-- Reproducible metrics with precision/recall/F1/PR-AUC, confusion matrix and threshold analysis.
-- Scientifically defensible conclusions, model limitations, notebooks and BDAPP presentation.
-- If predictive ground truth is insufficient, explicit feasibility revision instead of false claims.
+## 7. Component coverage
+The **product vision** concerns the health of an EV's battery, drive motor, inverter, charging and thermal components. The **evaluated MVP** will cover those components for which actual measured inputs and valid model ground truth are available. Dataset constraints determine testable submodules, not the overall project identity.
 
-**Ideation and Project Planning is COMPLETE. Model building and empirical feasibility are subsequent stages.**
+## 8. BDAPP deliverables
+Data assessment; preprocessing; EDA; time-series feature engineering; monitoring/anomaly model; future-risk prediction model; baseline and advanced model comparison; independent evaluation; sequential replay proof of concept; scientific report and presentation.
+
+## 9. Explicit exclusions
+Full commercial application, authentication/backend business functions, route planning, remote vehicle control, autonomous repairs, claims of universal EV compatibility or unvalidated exact failure dates.
+
+## 10. Acceptance criteria
+- The monitoring model produces repeated, traceable outputs as telemetry windows advance.
+- The predictive model is evaluated only where the source supports documented subsequent faults/risk targets.
+- The pipeline has time/vehicle-group leakage safeguards, documented data quality, class imbalance treatment and independent evaluation.
+- Reports distinguish anomalous signals, statistical forecasts, confirmed failures and unavailable data.
+- False alarms and detection performance are quantified where suitable labels exist.
+- Results can be reproduced from cited datasets and code.
+
+## 11. Scientific feasibility rule
+**The project goal will not be redefined to match whichever dataset is easiest.** If an available source lacks future fault labels, it can support monitoring but not validated future-failure prediction. Find/validate a suitable labeled source for the predictive track or clearly report the blocked requirement. Never invent a target or lead-time statistic.
+
+**Ideation & Project Planning: CLOSED.** Changes after this baseline require an explicit new scope decision, not informal rewriting.

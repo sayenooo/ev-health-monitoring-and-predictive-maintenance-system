@@ -1,30 +1,30 @@
-# Research and ML Requirements — HealthCar
-**Document ID:** HC-SRS-001 · **Version:** 1.1 · **Baseline:** 2026-10-16
+# ML System Requirements — HealthCar
+**Document ID:** HC-SRS-001 · **Version:** 2.0 · **Baseline:** 2026-10-16
 
-This specification governs an **applied ML prediction experiment** for BDAPP, not an application/backend.
+## Functional requirements
+| ID | Requirement | Priority | Verification |
+|---|---|---|---|
+| ML-01 | Consume time-ordered EV telemetry and retain a rolling history window | Must | Sequential replay shows updated input state |
+| ML-02 | Validate missing, non-finite, stale and implausible measurements | Must | Data-quality report and checks |
+| ML-03 | Calculate interpretable context-aware vehicle-health descriptors | Must | Tested feature-extraction pipeline |
+| ML-04 | Detect unusual current behavior using statistical/ML anomaly methods | Must | Contextual monitoring outputs and alert analysis |
+| ML-05 | Generate new monitoring inference as each observation/window arrives | Must | Sequential replay test |
+| ML-06 | Train predictive models using strictly earlier inputs and verified subsequent fault outcomes | Must | Target/split audit and predictive experiment |
+| ML-07 | Compare predictive baselines and candidate stronger models | Must | Independent model comparison |
+| ML-08 | Report future-risk score and clearly state supported time horizon (if any) | Must | Risk output and defensible definition |
+| ML-09 | Produce evidence-backed early warnings and suggestions, without vehicle control | Must | Demonstration with explanation and uncertainty |
+| ML-10 | Evaluate PR-AUC, recall, precision/F1, class distribution, false alarms and, where available, lead time | Must | Evaluation report |
+| ML-11 | Maintain reproducible data provenance, code, seeds and experiment settings | Must | Reproducibility audit |
+| ML-12 | Support other EV components only when compatible sensors and labels exist | Scope guard | Evidence mapping by component |
 
-## Research functional requirements
-| ID | Requirement | Verification |
-|---|---|---|
-| ML-01 | Inventory processed EV fault source, provenance and labels | File/metadata audit |
-| ML-02 | Define candidate target and temporal cutoff with no future information in features | Target specification / leakage review |
-| ML-03 | Quantify class imbalance, source missingness and operating-condition coverage | EDA tables and plots |
-| ML-04 | Create train/validation/test separated by vehicle | Split manifest and no overlapping vehicle IDs |
-| ML-05 | Extract historical statistical and time-series features | Documented code and feature dictionary |
-| ML-06 | Train naive and meaningful comparison baselines | Experiment logs |
-| ML-07 | Compare a justified stronger model family | Controlled metrics on same split |
-| ML-08 | Evaluate PR-AUC, precision, recall, F1, confusion matrix and false alarms | Independent test report |
-| ML-09 | Document feature influence, calibration and limitations | Interpretation report |
-| ML-10 | Produce reproducible notebooks, technical report and presentation | BDAPP deliverables |
+## Quality requirements
+- **Temporal validity:** no look-ahead in feature engineering or labels; no overlapping leakage across partitions.
+- **Group validity:** recordings from the same vehicle or experiment do not cross incompatible holdout groups.
+- **Signal integrity:** explicit units, time gaps, data quality flags and source definitions.
+- **Operational definition:** repeated inference in chronological replay; continuous weight updates are *not* assumed.
+- **Transparency:** distinguish observed deviations, model-estimated risk, confirmed fault and unavailable sensors.
+- **Reproducibility:** notebooks/code, versioned configurations and measured results.
+- **Safety:** informational recommendations only; no actuation, automatic repair or safety certification claims.
 
-## Nonfunctional research requirements
-- Provenance, licensing and data-version traceability.
-- No train/test leakage by vehicle, time or preprocessing fit.
-- Fixed random seeds and dependency listing.
-- Memory-aware processing of >1 GB research dataset.
-- Clear distinction among binary vehicle-level risk, time-bounded fault prediction and present-time diagnosis.
-- Never claim a numeric failure horizon without labels that support it.
-- Standard names: snake_case code, numbered notebooks, versioned documentation.
-
-## Not required for this course
-User registration, backend API, dashboard/frontend, live CAN/OBD-II integration, vehicle commands, maintenance scheduling platform or automated repairs.
+## BDAPP deliverable boundary
+The deliverable is a tested **ML research prototype** for both monitoring and prediction, not a full website or business software platform.

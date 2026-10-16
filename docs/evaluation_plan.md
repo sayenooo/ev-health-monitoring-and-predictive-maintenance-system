@@ -1,33 +1,30 @@
-# ML Evaluation Protocol — HealthCar
-**Document ID:** HC-EVL-001 · **Version:** 1.1 · **Baseline:** 2026-10-16
+# Evaluation Plan — HealthCar
+**Document ID:** HC-EVL-001 · **Version:** 2.0 · **Baseline:** 2026-10-16
 
-## Scientific objective
-Evaluate whether historical EV charging sensor records predict vehicle-level confirmed battery-fault status for unseen vehicles, and assess whether an explicit future prediction horizon is supported by labels and timestamps.
+## Question being evaluated
+Does HealthCar (A) identify anomalous *current* EV behavior from continuously consumed telemetry and (B) forecast elevated risk of a **subsequently documented** fault from earlier measurements, with acceptable false-alarm and missed-event trade-offs?
 
-## Validation design
-1. Audit original label creation, time ordering, vehicle IDs, dataset classes and any publisher-established train/test splits.
-2. Define observation windows *before* labels / confirmed failures where such timing is verifiable.
-3. Split at the **vehicle level** into train, validation and held-out test. Never let snippets from the same vehicle cross partitions.
-4. Fit scalers, imputers, encoders and feature selection solely on the training data within each fold.
-5. Use stratification/group-aware techniques without leaking labels through vehicle identifiers or future information.
+## Track A: continuous monitoring
+- Time-ordered loading, data-validation and rolling-window construction.
+- Operating-context statistical baseline and ML anomaly method where justified.
+- Repeated inference and alert-persistence experiments on historical replay.
+- Measure signal coverage, alerts per time/records, distribution shifts, sensitivity to operating modes and stability.
+- Only compute real-fault precision/recall where independently confirmed event labels exist; simulated perturbations must be labeled synthetic.
 
-## Models
-- **Reference:** majority/prior-probability or constant-risk dummy.
-- **Baselines:** logistic regression and random forest (or comparable, resource-feasible predictors).
-- **Stronger comparison:** gradient boosting; evaluate a sequence model only if fair train/validation support exists.
+## Track B: future risk prediction
+- Freeze event-label definition, observation end time and prediction horizon (only if verified in actual records).
+- Train/validation/test with vehicle separation and chronological safeguards.
+- Compute all transforms with training-only fit; no future sensor readings as features.
+- Compare naive baseline and at least two justified predictive ML methods.
+- Primary outcomes where available: fault-positive PR-AUC, recall/precision and false-alarm burden.
+- Secondary: macro-F1, confusion matrix, ROC-AUC as appropriate, calibration, threshold curves, confidence intervals.
+- For documented event timestamps only: advanced warning lead time and time-to-event metrics.
 
-## Measures
-**Primary:** PR-AUC and class-specific recall/precision for the confirmed-fault class in imbalanced data.
+## Combined demonstration
+Run both inference interfaces sequentially over replayed telemetry **where relevant model inputs exist**. For differing datasets, demonstrate two explicit tracks rather than fabricate a shared vehicle record. Show status, risk estimate, source, uncertainty and evidence; distinguish prediction from diagnosis.
 
-**Secondary:** macro-F1, confusion matrix, ROC-AUC where defined, threshold-vs-false-alert trade-off, probability calibration and bootstrap uncertainty where feasible.
-
-**Lead-time / horizon:** calculate only when per-vehicle fault times and data windows support it. Do not reinterpret vehicle-level status as an N-day failure label.
-
-## Error analysis
-Analyze false positives and missed fault cases, class prevalence, time-coverage effects and the influence of sensor histories. Document dataset domain and possible distribution shift to other EV brands or conditions.
-
-## Supporting data limits
-SCUT has no verified future-fault events, so it cannot prove predictive fault accuracy. PMSM faults are laboratory present-state classes; report separately if used.
-
-## Reporting policy
-Release split definitions, configuration, model seeds, data schema decisions, charts and balanced limitations. No 'accuracy' or 'failure prediction' numbers until actual independent test experiments have run.
+## Reporting requirements
+- Cite source records and data processing decisions.
+- Show class prevalence, warning thresholds and error types.
+- Include leakage checks and independently held-out results.
+- No invented quantitative accuracy, no universal multi-component reliability claims and no automated vehicle intervention.

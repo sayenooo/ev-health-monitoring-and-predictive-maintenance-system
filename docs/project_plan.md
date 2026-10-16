@@ -1,53 +1,50 @@
-# HealthCar — BDAPP Project Plan
-**Document ID:** HC-PL-001 · **Version:** 1.1 · **Approved:** 2026-10-16
+# Project Plan — HealthCar
+**Document ID:** HC-PL-001 · **Version:** 2.0 · **Baseline:** 2026-10-16  
+**Scope:** ML-based EV Health Monitoring **AND** Predictive Maintenance for BDAPP
 
-## Research question
-Can ML models trained on *past EV charging records* identify battery problems confirmed **after** the observed history, better than simple baselines, without leaking information from the same vehicle into train and test?
+## Fixed research objective
+Build an ML system that repeatedly evaluates available EV telemetry, detects current anomalies and predicts prospective maintenance risks from **earlier measurements** when validated subsequent-fault outcomes are available. Give interpretable early warnings; do not build a commercial vehicle-control platform.
 
-## Prediction specification — feasibility gated
-- **Unit:** vehicle, derived from chronologically ordered historical charging snippets.
-- **Inputs:** historical current, voltage, temperature, charge and derived time-series descriptors, as available from primary data.
-- **Primary label candidate:** verified vehicle-level fault outcome (binary normal vs confirmed fault).
-- **Prediction horizon:** only set a specific time-to-fault cutoff if file-level event timestamps support it. Otherwise call this *early fault-risk classification*, **not** 'fails within seven days'.
-- **Output:** per-vehicle risk score/class and supporting feature evidence.
-- **Split:** whole vehicles separated across train/validation/test, with time-order safeguards and preprocessing fitted only on training vehicles.
-- **Metrics:** PR-AUC, class recall, precision, F1, confusion matrix, false-positive trade-offs, calibration; event lead time only if labels support it.
-
-## Work breakdown structure
-| ID | Workstream | Outputs | Completion gate |
+## Milestone plan
+| ID | Milestone | Main work | Exit gate |
 |---|---|---|---|
-| M1 | Ideation & ML Research Planning | Approved RQs, target candidate, dataset strategy, metrics, risks, milestone plan | **COMPLETE** |
-| M2 | Target & Dataset Feasibility | Primary processed dataset inventory, label granularity and timestamp review, go/no-go on horizon | Dataset demonstrably supports a predictive target |
-| M3 | EDA & Data Preparation | Temporal data quality, outliers, imbalance, split manifest and features | Leakage controls and data dictionary documented |
-| M4 | Prediction Baselines | Dummy, logistic regression, random forest or other justified baselines | Reproducible independent initial metrics |
-| M5 | Advanced Model Comparison | Gradient boosting and optional sequence approach; tuning on validation only | Fair comparison against baseline |
-| M6 | Evaluation & Interpretation | PR curves, threshold trade-offs, calibration, ablations/explanations, robustness | Scientifically defensible findings and limitations |
-| M7 | BDAPP Final Deliverables | Clean notebooks, figures, report, proposal/presentation updates, GitHub reproducibility | Complete ML-focused course submission |
+| M1 | Ideation & Project Planning | Fix objective, core ML tracks, scope, metrics, risks and source strategy | **COMPLETE — 2026-10-16** |
+| M2 | Data Source & Target Feasibility | Inventory actual SCUT, PMSM and real-EV fault sources; verify inputs, labels and time order | Valid monitoring source and valid prospective prediction target identified |
+| M3 | EDA & Time-Series Preprocessing | Audit sensor units, gaps and missingness; create temporal windows; define splits | Reproducible datasets and no leakage |
+| M4 | Continuous Monitoring Model | Build operating-context baseline and anomaly model; evaluate alert behavior | Sequential scoring and evidence-backed current-health alerts |
+| M5 | Predictive Maintenance Model | Train future-risk baseline(s) and improved model(s); set horizon only if labels permit | Independent predictive evaluation |
+| M6 | Joint Evaluation & Early-Warning Demo | Replay telemetry, surface monitoring/prediction results, evaluate alert errors and timing | Working ML research proof of concept and clear measured limitations |
+| M7 | BDAPP Research Deliverables | Final model comparison, report, graphs, notebooks, presentation | Reproducible and defensible final submission |
 
-## Experimental strategy
-1. Audit publisher source files and metadata before stating any temporal prediction horizon.
-2. Construct non-overlapping vehicle-level groups.
-3. Describe class prevalence and time/coverage differences by outcome.
-4. Fit baseline feature extraction and preprocessing only on training partitions.
-5. Train simple models first. Use a sequence network only if split/sample size and project time warrant it.
-6. Tune class weights and thresholds on validation, **never** the held-out test.
-7. Document uncertainty, false alarms, failure misses and applicability limits.
+M4 and M5 are **both mandatory modeling goals**, subject to the scientifically necessary future-event label gate. A data limitation does not erase the goal.
 
-## Dataset priority
-1. **Primary:** processed Zhang et al. EV charging/fault dataset: https://doi.org/10.6084/m9.figshare.23659323
-2. **Auxiliary:** SCUT telemetry — for independent EDA/monitoring feature investigation, not primary labels.
-3. **Optional:** PMSM labeled laboratory fault classification — separate supplementary experiment, not vehicle future-failure prediction.
+## Dataset allocation
+- **Monitoring:** SCUT real-world EV telemetry (available locally; selected table quality not yet fully audited).
+- **Future prediction:** Zhang et al. real EV historical charging/fault records (candidate; dataset structure and event chronology need inspection). Another source may be selected only after documented feasibility assessment.
+- **Optional additional fault classification:** PMSM experimental inverter data, clearly labeled laboratory evidence.
 
-## Research risks & mitigations
-| Risk | Mitigation |
+## Technical evaluation design
+### Monitoring track
+Interpret raw context → rolling windows → health features → statistical/ML anomaly scores → repeated alert decisions. Evaluate false alert burden, temporal stability and known/verified anomalies only where ground truth exists.
+
+### Prediction track
+Define observed history interval and subsequent fault outcome; ensure future information is excluded from features. Partition by vehicle and, when applicable, time. Compare naive baseline, logistic/tree methods and justified temporal models. Report PR-AUC, recall, precision, F1, calibration and false-alarm tradeoffs; report lead time only if event times permit.
+
+### Integration
+Use an offline historical telemetry replay to demonstrate repeated model inference and alert generation. No requirement for deployed OBD hardware, full frontend or automated repairs.
+
+## Research risks and controls
+| Risk | Control |
 |---|---|
-| Vehicle-level labels without reliable failure timestamps | Use earlier-history vehicle-level risk classification; do not invent an N-day horizon |
-| Same-vehicle / neighboring-snippet leakage | Vehicle-disjoint partitions and group-aware evaluation |
-| Extreme class imbalance and uncertain negative class | PR-AUC, per-class recall, baseline and probability calibration |
-| Large primary dataset / limited RAM | Metadata inventory, streamed reads, bounded subset prototyping |
-| Lab vs on-road source mismatch | Keep PMSM as a separate optional result |
-| Unsupported full-EV multi-component claim | Define the model's supported battery target explicitly |
-| Complicated software engineering scope | Notebook-first pipeline; interface not required |
+| Inadequate prospective failure labels | Audit labeled source and actual event times; do not invent prediction horizon |
+| Different sensors or component coverage | Independent experimental tracks and explicit scope-of-validity |
+| Leakage via overlapping windows / vehicle identity | Group-aware, chronology-aware partitions and train-only transforms |
+| Highly imbalanced faults | PR-AUC, class-specific recall, threshold and false-alarm analysis |
+| Spurious anomaly alerts | Contextual baselines and persistence/robustness checks |
+| Hardware/data size limits | Stream/chunk data and demonstrate inference via offline replay |
+| False sense of automotive reliability | Research-only alerts with evidence and uncertainties |
 
-## Phase closure policy
-M1 is signed off based on clear research design. M2–M7 are checked in [progress_tracker.md](progress_tracker.md) only after data and model evidence exist. The PDF companion is a fixed version snapshot, not live GitHub synchronization.
+## Progress governance
+The latest completion record lives in `docs/progress_tracker.md`. The companion PDF is a versioned baseline with a markable checklist, not an automatically synchronized project-management system.
+
+**Next task:** M2 — inspect all downloaded data files, validate the real-EV future-fault source and freeze valid inputs and targets for both core tracks.
