@@ -1,38 +1,42 @@
-# Data Requirements & Sensor Dictionary
+# Data Requirements and Sensor Dictionary
+**Document ID:** HC-DAT-001 · **Version:** 1.0 · **Baseline:** 2026-10-16
 
-## SCUT passenger EV telemetry
-Published schema (to be confirmed against downloaded archives):
+## SCUT passenger EV source schema
+The following field definitions are from the [SCUT publisher's documentation](https://github.com/Translab-SCUT/Electric-vehicle-operation-data); the empirical archive-level validation belongs to M2.
 
-| Field | Meaning | Intended use |
-|---|---|---|
-| `Time` | timestamp | temporal ordering, sampling gaps |
-| `vhc_speed` | vehicle speed (km/h) | driving context |
-| `charging_signal` | source codes 1=charging, 3=driving | mode-specific analysis; other codes require verification |
-| `vhc_totalMile` | accumulated mileage (km) | exposure/usage context |
-| `hv_voltage` | pack voltage | electric-state monitoring |
-| `hv_current` | pack current | current and tentative power trends |
-| `bcell_soc` | battery SOC | charge-level context; verify units |
-| `bcell_maxVoltage` | maximum cell voltage | spread proxy |
-| `bcell_minVoltage` | minimum cell voltage | spread proxy |
-| `bcell_maxTemp` | maximum cell temperature | thermal monitoring |
-| `bcell_minTemp` | minimum cell temperature | thermal monitoring |
+| Source field | Intended meaning | Unit / interpretation | Monitoring use |
+|---|---|---|---|
+| `Time` | Acquisition timestamp | Verify parsed timezone and interval | Trend/order/gaps |
+| `vhc_speed` | Vehicle speed | km/h | Operating condition |
+| `charging_signal` | Source mode indicator | 1 = charging; 3 = driving | Context segmentation |
+| `vhc_totalMile` | Cumulative distance | km | Usage exposure |
+| `hv_voltage` | Battery pack voltage | V | Electrical signal |
+| `hv_current` | Battery pack current | A; sign to verify | Electrical signal |
+| `bcell_soc` | Battery state of charge | Scale/range to verify | Charge context |
+| `bcell_maxVoltage` | Highest cell voltage | V | Voltage variation |
+| `bcell_minVoltage` | Lowest cell voltage | V | Voltage variation |
+| `bcell_maxTemp` | Highest cell temperature | °C | Thermal variation |
+| `bcell_minTemp` | Lowest cell temperature | °C | Thermal variation |
 
-### Derived fields (after unit checks)
+## Conservative derived indicators
 - `cell_voltage_spread_V = bcell_maxVoltage - bcell_minVoltage`
 - `cell_temperature_spread_C = bcell_maxTemp - bcell_minTemp`
 - `battery_power_W_unverified_sign = hv_voltage * hv_current`
-- Later: operating-mode-aware rolling trends and rates, after handling irregular timestamps.
+- Mode-conditioned, time-aware rolling medians and slopes **after** irregular timestamps are resolved.
 
-**Not supported by SCUT alone:** validated battery SOH, RUL, motor condition, brake/tire wear, coolant-pump faults, actual future failure dates.
+These are monitoring descriptors, not validated battery damage thresholds or SOH estimators.
 
-## PMSM inverter laboratory dataset
-Expected original sensor columns (case may vary): `Ia`, `Ib`, `VDC`, `IDC`, `T1`, `T2`, `T3`, `VD`; fault target `FDD` with F0 normal and F1–F8 experimental faults. Verify the actual columns, target mapping, units and repeated sessions before model building. Derived features require label-leakage inspection.
+## PMSM experimental source schema
+Zenodo's 3.0 archive is expected to provide eight core measured inputs such as phase currents (`Ia`, `Ib`), DC-bus voltage/current (`VDC`, `IDC`), half-bridge temperatures (`T1`–`T3`) and gate-driver voltage (`VD`); class label `FDD` may be present in processed data. **Exact file-level spellings, meanings, labels and units must be verified from downloaded metadata.** Derived features need target leakage checks.
 
-## Data quality gates
-- Timestamp parse and ordering; gaps and duplicate times.
-- Null percentages, infinities, plausible physical values and units.
-- Correct vehicle selection: exclude SCUT buses from the passenger-EV MVP.
-- Operating codes and current sign conventions.
-- Different sampling rates and battery chemistries per SCUT vehicle.
-- PMSM class counts, experiments/session boundaries, possible correlated rows.
-- Provenance, source references and redistribution/license constraints.
+## Data acceptance requirements
+1. Preserve originals, metadata and extraction source; compute/check archive checksums where possible.
+2. Document missing and infinite values before transforming them.
+3. Parse and sort time correctly; flag repeated timestamps and long gaps.
+4. Preserve operating-mode codes and mark unrecognized values as unknown.
+5. Document source-specific labels and their unit of prediction (sample, experiment or vehicle).
+6. Avoid mixing data from different battery chemistries without explicit context.
+7. Keep unrelated component fields as `unavailable` rather than imputing them.
+
+## Boundaries
+These inputs alone do not establish verified battery SOH, RUL, future failure times, motor condition on public roads, tire/brake wear or coolant system faults.

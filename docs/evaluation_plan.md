@@ -1,29 +1,46 @@
-# HealthCar — ML Evaluation Plan (draft)
+# Evaluation Protocol — HealthCar
+**Document ID:** HC-EVL-001 · **Version:** 1.0 · **Baseline:** 2026-10-16
 
-## Gate 0: before modeling
-- [ ] Download official source archives; validate integrity and provenance
-- [ ] Identify exact raw tables and field names, types, labels and units
-- [ ] Calculate duplicate / missing / infinity / timestamp-gap rates by vehicle
-- [ ] Confirm charging modes, sign of pack current and presence of experiment IDs
+This document defines the **methodology**, not measured model performance.
 
-## Track A — SCUT EV monitoring
-1. Train simple context-aware statistical rules on a defined earlier observation period.
-2. Compare a robust-baseline score with Isolation Forest only if warranted by the signal distribution.
-3. Evaluate warning volume per observation/time period, temporal stability and behavior across charging/driving modes.
-4. Preserve chronological boundaries; no shuffled random adjacent windows.
-5. **Never report fault-detection accuracy/recall** on SCUT without true verified fault labels. Artificially inserted perturbations may be labeled synthetic stress tests, not 'real EV faults'.
+## Gate 1: dataset eligibility
+1. List every file in each official archive and record extraction path/version.
+2. Verify actual schema, columns, source units, row counts and any embedded metadata.
+3. Record missingness, +inf/-inf, duplicate timestamps, gaps, impossible values and mode codes.
+4. Reconcile selected SCUT source-table row counts with the publisher's stated vehicle total.
+5. Identify true PMSM recording/session IDs or document inability to construct a defensible group split.
 
-## Track B — PMSM supervised lab classification
-1. Confirm F0–F8 target, class counts, original vs derived predictors.
-2. Compare majority baseline, logistic regression and Random Forest.
-3. Split by experimental recording/session or nonoverlapping time blocks when possible.
-4. Report macro-F1, per-class recall, class support, confusion matrix and uncertainty.
-5. Be explicit about any inability to validate on unseen rigs/vehicles.
+**Required result:** accepted data source inventory and documented exceptions before models.
 
-## Track C — optional predictive maintenance
-Require verified failure times and pre-fault histories before predicting future failure. Group test by vehicle and time; define horizon from the available labels. Report precision/recall, PR-AUC, false alarms per vehicle-time, and advance warning lead time.
+## Track A — SCUT monitoring / anomaly research
+- Fit a context-aware transparent baseline (e.g., robust conditional signal range) on an earlier time period.
+- Where justified, compare a representative unsupervised model such as Isolation Forest.
+- Keep training/testing chronological; prevent overlap across split boundaries.
+- Present alert rate per observation and per available operating time, persistence, and sensitivity to conditions/thresholds.
+- Assess plausibility through expert/feature review and separately labeled synthetic stress tests when needed.
+- **Prohibited claim:** real-world fault-classification F1/recall from unlabeled SCUT records.
 
-## Product validation
-- Distinguish sensor missingness, anomalous observation, potential fault and confirmed diagnosis.
-- Prefer evidence-based, non-invasive recommendations with uncertainty.
-- No actuator control, dangerous maintenance instructions or automatic repairs.
+## Track B — PMSM laboratory supervised fault classification
+- Identify `FDD` label definitions, class distributions, raw versus engineered predictors and possible label proxies.
+- Inspect session/time/operating-condition metadata and block leakage from correlated adjacent samples.
+- Majority-class dummy baseline; compare logistic regression and tree-based model where reasonable.
+- Independent holdout with group/recording separation where available; record limitations if only time-blocking feasible.
+- Report macro-F1, per-class precision/recall, class supports, normalized and raw confusion matrix.
+- Label all figures and metrics as **laboratory PMSM experimental results**, not production-vehicle performance.
+
+## Track C — conditional real-EV early warning
+**Eligibility:** documented vehicle-level fault labels, pre-event history, defined lead-time window, and vehicle/time-disjoint holdout.
+
+If eligible, pre-register evaluation horizon; report PR-AUC, false alarms per vehicle-time, class-wise recall and advance warning lead time, including model limitations. If ineligible, record **NO-GO** and retain monitoring-only scope.
+
+## Reproducibility policy
+- Fixed seeds where stochastic procedures are used; software versions recorded.
+- Versioned split specifications; transformations fitted only on training observations.
+- Persist model/configuration metadata and link reports to code commits.
+- Separate exploratory/validation/test data to avoid threshold selection on the final test set.
+- Never present a plot, warning or statistical pattern as a confirmed maintenance diagnosis without its supporting ground truth.
+
+## Application verification
+- Data unavailable vs invalid reading vs anomaly vs diagnosed fault clearly separated.
+- All alerts point to source signals and preserve model uncertainty.
+- Output is advisory only. No automotive actuation or high-voltage repair instructions.
